@@ -23,6 +23,8 @@ How many hands does Player 1 win?
 #%%
 import numpy as np
 import pandas as pd
+import os as os
+
 raw = pd.read_csv('poker.txt', header = None)
 
 #%%
@@ -36,6 +38,7 @@ class hand:
     def __init__(self, lis):
         self.suits = [list(card)[1] for card in lis]
         self.nums = self.get_nums(lis)
+        self.nums.sort()
         self.flush = self.is_flush()
         self.straight = self.is_straight()
         self.num_dict()
@@ -56,9 +59,9 @@ class hand:
         nums[nums=='Q'] = '12'
         nums[nums=='K'] = '13'
         nums[nums=='A'] = '14'
-        return nums.astype('int')
+        nums = nums.astype('int')
+        return nums
     
-        
     
     def is_straight(self):
         if (len(set(self.nums)) == 5) and (np.max(self.nums)-np.min(self.nums) == 4):
@@ -128,10 +131,21 @@ class hand:
             return 2
     
     def tie_break(self,score):
-        pass
-        
-    
-        
+        if score == 2:
+            return max (self.nums)
+        elif score == 3:
+            pass
+"""     
+One Pair: 
+Two Pairs: 
+Three of a Kind: 
+Straight: 
+Flush: 
+Full House: 
+Four of a Kind: 
+Straight Flush: 
+Royal Flush: 
+"""   
     
 H1 = hand(P1)
 print(H1.nums)
@@ -149,9 +163,8 @@ class winner:
         
 
 #%% 
-Wins1 = 0
-Wins2 = 0   
-
+Wins1, Wins2 = 0, 0
+ties = []
 for i in range(1000):
     W = winner()
     both_hands = raw.loc[i].item().split(' ')
@@ -161,10 +174,43 @@ for i in range(1000):
     S2 = Hand2.get_score()
     
     if S1 == S2:
-        #tie breaking stuff still to come
-        print("Tie")
-        pass
+        #for this set, the only ties are high card and 1 pair
+        #compare highest number
+        if S1==2:
+            i=1
+            while W.get() ==0:            
+                if Hand1.nums[-i] > Hand2.nums[-i]:
+                    W.set(1)
+                elif Hand1.nums[-i] < Hand2.nums[-i]:
+                    W.set(2)
+                i+=1
+    
+        if S1 == 3:
+            pair1, pair2 = 0, 0
+            
+            keys1 = list(Hand1.dict.keys())
+            vals1 = list(Hand1.dict.values())
+            pair1 = keys1[vals1.index(2)]
+            
+            keys2 = list(Hand2.dict.keys())
+            vals2 = list(Hand2.dict.values())
+            pair2 = keys2[vals2.index(2)]
+            
+            if pair1>pair2:
+                W.set(1)
+            elif pair1<pair2:
+                W.set(2)
+            else:
+                i=1
+                while W.get() ==0:            
+                    if Hand1.nums[-i] > Hand2.nums[-i]:
+                        W.set(1)
+                    elif Hand1.nums[-i] < Hand2.nums[-i]:
+                        W.set(2)
+                    i+=1
+        
     elif S1 > S2:
+        
         W.set(1)
     else:
         W.set(2)
@@ -173,15 +219,9 @@ for i in range(1000):
         Wins1 += 1
     elif W.get() == 2:
         Wins2 += 1
-        
-    
-    
-    
-    #print("hands:", both_hands)
-    #print(Hand1.get_score(), Hand2.get_score())
-    #print('=================')        
-    #print('=================')        
-    
+
+#Final Answer:
+#376
     
     
         
